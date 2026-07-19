@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { refDebounced } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import RecipeTable from '@/components/RecipeTable.vue'
 import SearchBar from '@/components/SearchBar.vue'
@@ -10,11 +11,12 @@ const { recipes, nameOf, getBaseIngredients } = useRecipes()
 const { exportJSON, importJSON, clearAll } = usePrices()
 
 const search = ref('')
+const debouncedSearch = refDebounced(search, 150)
 const showValue = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 const filteredRecipes = computed(() => {
-  const query = search.value.trim().toLowerCase()
+  const query = debouncedSearch.value.trim().toLowerCase()
   if (!query) return recipes
   return recipes.filter((recipe) => {
     if (recipe.name.toLowerCase().includes(query)) return true
