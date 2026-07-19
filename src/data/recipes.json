@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Hewn Log",
+    "nameID": "HewnLog",
+    "level": 1,
+    "labor": 10,
+    "hidden": false,
+    "ingredients": [{ "item": "WoodItem", "quantity": 2 }],
+    "outputs": [{ "item": "HewnLogItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Iron Concentrate",
+    "nameID": "IronConcentrate",
+    "level": 1,
+    "labor": 20,
+    "hidden": false,
+    "ingredients": [{ "item": "IronOreItem", "quantity": 2 }],
+    "outputs": [{ "item": "IronConcentrateItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Clay Mold",
+    "nameID": "ClayMold",
+    "level": 1,
+    "labor": 15,
+    "hidden": false,
+    "ingredients": [{ "item": "ClayItem", "quantity": 2 }],
+    "outputs": [{ "item": "ClayMoldItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Iron Bar",
+    "nameID": "IronBar",
+    "level": 1,
+    "labor": 60,
+    "hidden": false,
+    "ingredients": [
+      { "item": "IronConcentrateItem", "quantity": 1 },
+      { "item": "ClayMoldItem", "quantity": 4 }
+    ],
+    "outputs": [
+      { "item": "IronBarItem", "quantity": 4, "primary": true },
+      { "item": "ClayMoldItem", "quantity": 2, "primary": false },
+      { "item": "SlagItem", "quantity": 1, "primary": false }
+    ]
+  },
+  {
+    "name": "Iron Plate",
+    "nameID": "IronPlate",
+    "level": 2,
+    "labor": 30,
+    "hidden": false,
+    "ingredients": [{ "item": "IronBarItem", "quantity": 2 }],
+    "outputs": [{ "item": "IronPlateItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Anvil",
+    "nameID": "Anvil",
+    "level": 1,
+    "labor": 180,
+    "hidden": false,
+    "ingredients": [
+      { "item": "HewnLogItem", "quantity": 10 },
+      { "item": "IronBarItem", "quantity": 12 }
+    ],
+    "outputs": [{ "item": "AnvilItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Wood Board",
+    "nameID": "WoodBoard",
+    "level": 1,
+    "labor": 12,
+    "hidden": false,
+    "ingredients": [{ "item": "HewnLogItem", "quantity": 1 }],
+    "outputs": [{ "item": "WoodBoardItem", "quantity": 2, "primary": true }]
+  },
+  {
+    "name": "Wood Bench",
+    "nameID": "WoodBench",
+    "level": 1,
+    "labor": 40,
+    "hidden": false,
+    "ingredients": [{ "item": "WoodBoardItem", "quantity": 6 }],
+    "outputs": [{ "item": "WoodBenchItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Acorn Powder",
+    "nameID": "AcornPowder",
+    "level": 5,
+    "labor": 15,
+    "hidden": false,
+    "ingredients": [{ "item": "AcornItem", "quantity": 4 }],
+    "outputs": [{ "item": "AcornPowderItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Bannock",
+    "nameID": "Bannock",
+    "level": 2,
+    "labor": 15,
+    "hidden": false,
+    "ingredients": [
+      { "item": "AcornPowderItem", "quantity": 1 },
+      { "item": "WheatItem", "quantity": 1 }
+    ],
+    "outputs": [{ "item": "BannockItem", "quantity": 1, "primary": true }]
+  },
+  {
+    "name": "Advanced Upgrade 1",
+    "nameID": "AdvancedUpgradeLvl1",
+    "level": 1,
+    "labor": 90,
+    "hidden": true,
+    "ingredients": [{ "item": "BasicResearch", "quantity": 1 }],
+    "outputs": [{ "item": "AdvancedUpgradeLvl1Item", "quantity": 1, "primary": true }]
+  }
+]
