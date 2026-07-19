@@ -11,17 +11,13 @@ const props = defineProps<{
   mode: 'base' | 'value'
 }>()
 
-const { nameOf, getBaseIngredients, getValue } = useRecipes()
+const { nameOf, getIngredients, getBaseIngredients, getValue } = useRecipes()
 const { prices } = usePrices()
 
 const rows = computed(() =>
   props.recipes.map((recipe) => {
-    const ingredients = recipe.ingredients.map((ingredient) => ({
-      item: ingredient.item,
-      name: nameOf(ingredient.item),
-      quantity: ingredient.quantity,
-    }))
-    const base = props.mode === 'base' ? getBaseIngredients(recipe) : null
+    const ingredients = getIngredients(recipe)
+    const base = getBaseIngredients(recipe)
     const value = props.mode === 'value' ? getValue(recipe, prices.value) : null
     return { recipe, ingredients, base, value }
   }),
@@ -34,7 +30,8 @@ const rows = computed(() =>
       <tr class="border-b text-left">
         <th class="py-2 pr-4 font-medium">Recipe</th>
         <th class="py-2 pr-4 font-medium">Ingredients</th>
-        <th class="py-2 font-medium">{{ mode === 'base' ? 'Base Ingredients' : 'Value' }}</th>
+        <th class="py-2 font-medium" :class="{ 'pr-4': mode === 'value' }">Base Ingredients</th>
+        <th v-if="mode === 'value'" class="py-2 font-medium">Value</th>
       </tr>
     </thead>
     <tbody>
@@ -51,8 +48,8 @@ const rows = computed(() =>
             />
           </div>
         </td>
-        <td class="py-2">
-          <div v-if="row.base" class="flex flex-wrap gap-1">
+        <td class="py-2" :class="{ 'pr-4': mode === 'value' }">
+          <div class="flex flex-wrap gap-1">
             <IngredientChip
               v-for="base in row.base"
               :key="base.item"
@@ -61,20 +58,22 @@ const rows = computed(() =>
               :quantity="base.quantity"
             />
           </div>
-          <div v-else-if="row.value">
-            {{ formatMoney(row.value.value) }}
-            <span
-              v-if="row.value.unpriced.length"
-              class="text-muted-foreground"
-              :title="row.value.unpriced.map((id) => nameOf(id)).join(', ')"
-            >
-              ({{ row.value.unpriced.length }} unpriced)
-            </span>
-          </div>
+        </td>
+        <td v-if="mode === 'value' && row.value" class="py-2">
+          {{ formatMoney(row.value.value) }}
+          <span
+            v-if="row.value.unpriced.length"
+            class="text-muted-foreground"
+            :title="row.value.unpriced.map((id) => nameOf(id)).join(', ')"
+          >
+            ({{ row.value.unpriced.length }} unpriced)
+          </span>
         </td>
       </tr>
       <tr v-if="rows.length === 0">
-        <td colspan="3" class="text-muted-foreground py-6 text-center">No recipes match your search.</td>
+        <td :colspan="mode === 'value' ? 4 : 3" class="text-muted-foreground py-6 text-center">
+          No recipes match your search.
+        </td>
       </tr>
     </tbody>
   </table>

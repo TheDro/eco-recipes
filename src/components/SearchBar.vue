@@ -11,7 +11,7 @@ const showValue = defineModel<boolean>('showValue', { default: false })
     <Input v-model="search" type="search" placeholder="Search recipes or ingredients…" class="max-w-sm" />
     <label class="flex items-center gap-2 text-sm">
       <Switch v-model="showValue" />
-      Show value ($) instead of base ingredients
+      Show value ($)
     </label>
   </div>
 </template>
