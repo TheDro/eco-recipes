@@ -11,6 +11,10 @@ const props = defineProps<{
   mode: 'base' | 'value'
 }>()
 
+const emit = defineEmits<{
+  select: [name: string]
+}>()
+
 const { nameOf, getIngredients, getBaseIngredients, getValue } = useRecipes()
 const { prices } = usePrices()
 
@@ -45,6 +49,7 @@ const rows = computed(() =>
               :item="ingredient.item"
               :name="ingredient.name"
               :quantity="ingredient.quantity"
+              @select="emit('select', $event)"
             />
           </div>
         </td>
@@ -56,6 +61,7 @@ const rows = computed(() =>
               :item="base.item"
               :name="base.name"
               :quantity="base.quantity"
+              @select="emit('select', $event)"
             />
           </div>
         </td>

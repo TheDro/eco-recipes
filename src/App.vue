@@ -58,6 +58,10 @@ async function handleImportFile(event: Event) {
 function handleClearAll() {
   if (confirm('Clear all saved prices?')) clearAll()
 }
+
+function handleIngredientSelect(name: string) {
+  search.value = name
+}
 </script>
 
 <template>
@@ -86,7 +90,11 @@ function handleClearAll() {
 
     <SearchBar v-model:search="search" v-model:show-value="showValue" class="mb-4" />
 
-    <RecipeTable :recipes="filteredRecipes" :mode="showValue ? 'value' : 'base'" />
+    <RecipeTable
+      :recipes="filteredRecipes"
+      :mode="showValue ? 'value' : 'base'"
+      @select="handleIngredientSelect"
+    />
 
     <footer class="text-muted-foreground mt-8 text-xs">
       <p>

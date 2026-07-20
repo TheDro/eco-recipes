@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { usePrices } from '@/composables/usePrices'
 import { formatMoney, formatQuantity } from '@/lib/format'
 
@@ -11,6 +11,10 @@ const props = defineProps<{
   item: string
   name: string
   quantity: number
+}>()
+
+const emit = defineEmits<{
+  select: [name: string]
 }>()
 
 const { prices, setPrice, clearPrice } = usePrices()
@@ -40,16 +44,28 @@ function clear() {
   clearPrice(props.item)
   open.value = false
 }
+
+function handleClick(event: MouseEvent) {
+  if (event.ctrlKey || event.metaKey) {
+    open.value = true
+  } else {
+    emit('select', props.name)
+  }
+}
 </script>
 
 <template>
   <Popover v-model:open="open">
-    <PopoverTrigger as-child>
-      <Badge variant="secondary" class="cursor-pointer font-normal select-none">
+    <PopoverAnchor as-child>
+      <Badge
+        variant="secondary"
+        class="cursor-pointer font-normal select-none"
+        @click="handleClick"
+      >
         {{ name }} &times;{{ formatQuantity(quantity) }}
         <span v-if="contribution" class="text-muted-foreground ml-1">({{ contribution }})</span>
       </Badge>
-    </PopoverTrigger>
+    </PopoverAnchor>
     <PopoverContent class="w-64">
       <div class="flex flex-col gap-2">
         <p class="text-sm font-medium">{{ name }}</p>
