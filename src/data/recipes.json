@@ -25028,28 +25028,6 @@
     ]
   },
   {
-    "name": "Incinerate Garbage",
-    "nameID": "IncinerateGarbage",
-    "skill": "SelfImprovementSkill",
-    "level": 0,
-    "labor": 500,
-    "craftingTable": "BlastFurnaceObject",
-    "hidden": false,
-    "ingredients": [
-      {
-        "item": "GarbageItem",
-        "quantity": 4
-      }
-    ],
-    "outputs": [
-      {
-        "item": "DirtItem",
-        "quantity": 1,
-        "primary": true
-      }
-    ]
-  },
-  {
     "name": "Kite",
     "nameID": "Kite",
     "skill": "SelfImprovementSkill",
