@@ -9,7 +9,6 @@ Not affiliated with Strange Loop Games. Recipe data is adapted from the
 community [EcoCraftingTool](https://github.com/aritchie05/EcoCraftingTool)
 project.
 
-See [PLAN.md](./PLAN.md) for the full design.
 
 ## Data
 

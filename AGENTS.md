@@ -3,7 +3,8 @@
 Single-page Vue 3 + TypeScript + Vite app for browsing crafting recipes from
 the game Eco. Shows each recipe's direct ingredients and those ingredients
 reduced down to base/collectible resources, with an optional $ value mode.
-See README.md and PLAN.md for more background.
+See README.md for more background. Whenever implementing new features, 
+keep the YAGNI principle in mind to keep things simple.
 
 ## Stack
 
