@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IngredientChip from '@/components/IngredientChip.vue'
+import { Checkbox } from '@/components/ui/checkbox'
 import { usePrices } from '@/composables/usePrices'
 import { useRecipes } from '@/composables/useRecipes'
+import { useRecipeToggles } from '@/composables/useRecipeToggles'
 import { formatMoney } from '@/lib/format'
 import type { Recipe } from '@/lib/types'
 
@@ -17,12 +19,13 @@ const emit = defineEmits<{
 
 const { nameOf, getIngredients, getBaseIngredients, getValue } = useRecipes()
 const { prices } = usePrices()
+const { isEnabled, toggleEnabled, disabledSet } = useRecipeToggles()
 
 const rows = computed(() =>
   props.recipes.map((recipe) => {
     const ingredients = getIngredients(recipe)
-    const base = getBaseIngredients(recipe)
-    const value = props.mode === 'value' ? getValue(recipe, prices.value) : null
+    const base = getBaseIngredients(recipe, disabledSet.value)
+    const value = props.mode === 'value' ? getValue(recipe, prices.value, disabledSet.value) : null
     return { recipe, ingredients, base, value }
   }),
 )
@@ -32,6 +35,9 @@ const rows = computed(() =>
   <table class="w-full border-collapse text-sm">
     <thead>
       <tr class="border-b text-left">
+        <th class="py-2 pr-2 font-medium">
+          <span class="sr-only">Craft this recipe</span>
+        </th>
         <th class="py-2 pr-4 font-medium">Recipe</th>
         <th class="py-2 pr-4 font-medium">Ingredients</th>
         <th class="py-2 font-medium" :class="{ 'pr-4': mode === 'value' }">Base Ingredients</th>
@@ -40,6 +46,18 @@ const rows = computed(() =>
     </thead>
     <tbody>
       <tr v-for="row in rows" :key="row.recipe.nameID" class="border-b align-top">
+        <td class="py-2 pr-2">
+          <Checkbox
+            :model-value="isEnabled(row.recipe.nameID)"
+            :aria-label="`Craft ${row.recipe.name} into its base ingredients`"
+            :title="
+              isEnabled(row.recipe.nameID)
+                ? `Uncheck to treat ${row.recipe.name} as a base ingredient`
+                : `${row.recipe.name} is treated as a base ingredient`
+            "
+            @update:model-value="toggleEnabled(row.recipe.nameID)"
+          />
+        </td>
         <td class="py-2 pr-4 font-medium whitespace-nowrap">{{ row.recipe.name }}</td>
         <td class="py-2 pr-4">
           <div class="flex flex-wrap gap-1">
@@ -77,7 +95,7 @@ const rows = computed(() =>
         </td>
       </tr>
       <tr v-if="rows.length === 0">
-        <td :colspan="mode === 'value' ? 4 : 3" class="text-muted-foreground py-6 text-center">
+        <td :colspan="mode === 'value' ? 5 : 4" class="text-muted-foreground py-6 text-center">
           No recipes match your search.
         </td>
       </tr>

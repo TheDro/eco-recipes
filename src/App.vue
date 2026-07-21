@@ -7,9 +7,11 @@ import SearchBar from '@/components/SearchBar.vue'
 import { Button } from '@/components/ui/button'
 import { usePrices } from '@/composables/usePrices'
 import { useRecipes } from '@/composables/useRecipes'
+import { useRecipeToggles } from '@/composables/useRecipeToggles'
 
 const { recipes, nameOf, getBaseIngredients } = useRecipes()
 const { exportJSON, importJSON, clearAll } = usePrices()
+const { disabledSet } = useRecipeToggles()
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 150)
@@ -61,7 +63,7 @@ const filteredRecipes = computed(() => {
       nameOf(ingredient.item).toLowerCase().includes(query),
     )
     if (directMatch) return true
-    return getBaseIngredients(recipe).some((base) => base.name.toLowerCase().includes(query))
+    return getBaseIngredients(recipe, disabledSet.value).some((base) => base.name.toLowerCase().includes(query))
   })
 })
 

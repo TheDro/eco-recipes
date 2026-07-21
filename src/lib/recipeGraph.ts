@@ -16,11 +16,20 @@ export interface RecipeGraph {
   nameOf(itemID: string): string
   /** A recipe's direct ingredients, netted against any same-item output. */
   getIngredients(recipe: Recipe): ItemAmount[]
-  /** Expand a recipe's ingredients down to base/collectible items. */
-  getBaseIngredients(recipe: Recipe): ItemAmount[]
-  /** Expand a recipe's ingredients into a dollar cost, stopping at any priced item. */
-  getValue(recipe: Recipe, prices: PriceMap): ValueResult
+  /**
+   * Expand a recipe's ingredients down to base/collectible items. Any item
+   * whose producing recipe nameID is in `disabledRecipes` is treated as a
+   * base item itself, instead of being expanded further.
+   */
+  getBaseIngredients(recipe: Recipe, disabledRecipes?: ReadonlySet<string>): ItemAmount[]
+  /**
+   * Expand a recipe's ingredients into a dollar cost, stopping at any priced
+   * item, or any item whose producing recipe nameID is in `disabledRecipes`.
+   */
+  getValue(recipe: Recipe, prices: PriceMap, disabledRecipes?: ReadonlySet<string>): ValueResult
 }
+
+const noDisabledRecipes: ReadonlySet<string> = new Set()
 
 /**
  * A recipe's ingredients, netted against any output the same recipe produces
@@ -67,6 +76,7 @@ function choosePreferredProducer(candidates: Recipe[]): Recipe {
 }
 
 export function buildRecipeGraph(recipes: Recipe[]): RecipeGraph {
+  console.log("buildRecipeGraph")
   const recipeByNameID = new Map(recipes.map((r) => [r.nameID, r]))
 
   // Every item that some recipe produces as its primary output.
@@ -100,17 +110,35 @@ export function buildRecipeGraph(recipes: Recipe[]): RecipeGraph {
 
   // Per-item cache of "base ingredients needed to make exactly 1 unit of
   // this item", reused (and linearly scaled) for any requested quantity.
-  const unitExpansionCache = new Map<string, Map<string, number>>()
+  // Keyed by which recipes are currently disabled, since that changes which
+  // items act as leaves; rebuilt whenever the disabled set changes.
+  let unitExpansionCache = new Map<string, Map<string, number>>()
+  let unitExpansionCacheKey = ''
 
-  function expandUnit(itemID: string, visiting: Set<string>): Map<string, number> {
-    const cached = unitExpansionCache.get(itemID)
+  function cacheFor(disabledRecipes: ReadonlySet<string>): Map<string, Map<string, number>> {
+    const key = disabledRecipes.size === 0 ? '' : [...disabledRecipes].sort().join('\u0000')
+    if (key !== unitExpansionCacheKey) {
+      unitExpansionCache = new Map()
+      unitExpansionCacheKey = key
+    }
+    return unitExpansionCache
+  }
+
+  function expandUnit(
+    itemID: string,
+    visiting: Set<string>,
+    disabledRecipes: ReadonlySet<string>,
+    cache: Map<string, Map<string, number>>,
+  ): Map<string, number> {
+    const cached = cache.get(itemID)
     if (cached) return cached
 
     const producer = producerFor.get(itemID)
-    if (!producer || visiting.has(itemID)) {
-      // Raw/collectible item, or a cycle guard: treat it as its own leaf.
+    const isDisabled = producer !== undefined && disabledRecipes.has(producer.nameID)
+    if (!producer || isDisabled || visiting.has(itemID)) {
+      // Raw/collectible item, disabled recipe, or a cycle guard: treat it as its own leaf.
       const leaf = new Map([[itemID, 1]])
-      if (!producer) unitExpansionCache.set(itemID, leaf)
+      if (!producer || isDisabled) cache.set(itemID, leaf)
       return leaf
     }
 
@@ -118,14 +146,14 @@ export function buildRecipeGraph(recipes: Recipe[]): RecipeGraph {
     const outputQty = producer.outputs.find((o) => o.primary && o.item === itemID)?.quantity ?? 1
     const combined = new Map<string, number>()
     for (const ingredient of netIngredients(producer)) {
-      const perUnit = expandUnit(ingredient.item, visiting)
+      const perUnit = expandUnit(ingredient.item, visiting, disabledRecipes, cache)
       const scale = ingredient.quantity / outputQty
       for (const [baseItem, qty] of perUnit) {
         combined.set(baseItem, (combined.get(baseItem) ?? 0) + qty * scale)
       }
     }
     visiting.delete(itemID)
-    unitExpansionCache.set(itemID, combined)
+    cache.set(itemID, combined)
     return combined
   }
 
@@ -133,10 +161,11 @@ export function buildRecipeGraph(recipes: Recipe[]): RecipeGraph {
     return averageIngredients(recipe).map(({ item, quantity }) => ({ item, quantity, name: nameOf(item) }))
   }
 
-  function getBaseIngredients(recipe: Recipe): ItemAmount[] {
+  function getBaseIngredients(recipe: Recipe, disabledRecipes: ReadonlySet<string> = noDisabledRecipes): ItemAmount[] {
+    const cache = cacheFor(disabledRecipes)
     const totals = new Map<string, number>()
     for (const ingredient of averageIngredients(recipe)) {
-      const perUnit = expandUnit(ingredient.item, new Set())
+      const perUnit = expandUnit(ingredient.item, new Set(), disabledRecipes, cache)
       for (const [baseItem, qty] of perUnit) {
         totals.set(baseItem, (totals.get(baseItem) ?? 0) + qty * ingredient.quantity)
       }
@@ -153,11 +182,13 @@ export function buildRecipeGraph(recipes: Recipe[]): RecipeGraph {
     itemID: string,
     quantity: number,
     prices: PriceMap,
+    disabledRecipes: ReadonlySet<string>,
     visiting: Set<string>,
     totals: Map<string, number>,
   ): void {
     const producer = producerFor.get(itemID)
-    if (prices[itemID] !== undefined || !producer || visiting.has(itemID)) {
+    const isDisabled = producer !== undefined && disabledRecipes.has(producer.nameID)
+    if (prices[itemID] !== undefined || !producer || isDisabled || visiting.has(itemID)) {
       totals.set(itemID, (totals.get(itemID) ?? 0) + quantity)
       return
     }
@@ -165,15 +196,19 @@ export function buildRecipeGraph(recipes: Recipe[]): RecipeGraph {
     const outputQty = producer.outputs.find((o) => o.primary && o.item === itemID)?.quantity ?? 1
     const scale = quantity / outputQty
     for (const ingredient of netIngredients(producer)) {
-      expandValue(ingredient.item, ingredient.quantity * scale, prices, visiting, totals)
+      expandValue(ingredient.item, ingredient.quantity * scale, prices, disabledRecipes, visiting, totals)
     }
     visiting.delete(itemID)
   }
 
-  function getValue(recipe: Recipe, prices: PriceMap): ValueResult {
+  function getValue(
+    recipe: Recipe,
+    prices: PriceMap,
+    disabledRecipes: ReadonlySet<string> = noDisabledRecipes,
+  ): ValueResult {
     const totals = new Map<string, number>()
     for (const ingredient of averageIngredients(recipe)) {
-      expandValue(ingredient.item, ingredient.quantity, prices, new Set(), totals)
+      expandValue(ingredient.item, ingredient.quantity, prices, disabledRecipes, new Set(), totals)
     }
     let value = 0
     const unpriced: string[] = []
